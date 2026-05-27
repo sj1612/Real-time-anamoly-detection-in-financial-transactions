@@ -1,0 +1,990 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SENTRY-AI // Real-Time Financial Fraud Detection</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --bg-color: #0b0c10;
+            --surface-color: rgba(21, 26, 38, 0.65);
+            --border-color: rgba(255, 255, 255, 0.08);
+            --primary-glow: #1f4068;
+            
+            --neon-green: #00f2fe;
+            --neon-green-glow: rgba(0, 242, 254, 0.4);
+            
+            --neon-red: #ff007f;
+            --neon-red-glow: rgba(255, 0, 127, 0.4);
+            
+            --text-main: #f5f6f7;
+            --text-secondary: #8b9bb4;
+            --font-display: 'Space Grotesk', sans-serif;
+            --font-body: 'Outfit', sans-serif;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            background-image: 
+                radial-gradient(at 10% 20%, rgba(31, 64, 104, 0.15) 0px, transparent 50%),
+                radial-gradient(at 90% 80%, rgba(255, 0, 127, 0.04) 0px, transparent 50%);
+            color: var(--text-main);
+            font-family: var(--font-body);
+            overflow-x: hidden;
+            padding: 2rem;
+            min-height: 100vh;
+        }
+
+        /* Scrollbar styling */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.01);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--neon-green-glow);
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 1.5rem;
+        }
+
+        .logo-area h1 {
+            font-family: var(--font-display);
+            font-size: 2rem;
+            letter-spacing: 2px;
+            background: linear-gradient(90deg, var(--text-main) 60%, var(--neon-green) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: 700;
+        }
+
+        .logo-area p {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            margin-top: 0.25rem;
+        }
+
+        .connection-status {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.85rem;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border-color);
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: var(--neon-red);
+            box-shadow: 0 0 8px var(--neon-red-glow);
+            transition: all 0.3s ease;
+        }
+
+        .status-dot.connected {
+            background-color: #00ffd2;
+            box-shadow: 0 0 10px rgba(0, 255, 210, 0.6);
+        }
+
+        /* KPI Dashboard Grid */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .card {
+            background: var(--surface-color);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1.5rem;
+            backdrop-filter: blur(10px);
+            transition: transform 0.3s ease, border-color 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: transparent;
+        }
+
+        .card:hover {
+            transform: translateY(-2px);
+            border-color: rgba(255, 255, 255, 0.15);
+        }
+
+        .kpi-card::before {
+            background: linear-gradient(90deg, #1f4068, var(--neon-green));
+        }
+
+        .kpi-card.alert-active::before {
+            background: var(--neon-red);
+        }
+
+        .card-label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+        }
+
+        .card-value {
+            font-family: var(--font-display);
+            font-size: 2.25rem;
+            font-weight: 700;
+            color: var(--text-main);
+        }
+
+        .card-value.alert-value {
+            color: var(--neon-red);
+            text-shadow: 0 0 10px var(--neon-red-glow);
+        }
+
+        .kpi-trend {
+            font-size: 0.8rem;
+            margin-top: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+
+        /* Main Workspace Layout */
+        .workspace-grid {
+            display: grid;
+            grid-template-columns: 1fr 340px;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        @media (max-width: 1024px) {
+            .workspace-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .left-column {
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+            min-width: 0; /* Prevents grid column from being stretched by wide content */
+        }
+
+        /* Controls Panel */
+        .controls-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .slider-group {
+            margin-bottom: 1.25rem;
+        }
+
+        .slider-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.85rem;
+            margin-bottom: 0.5rem;
+            color: var(--text-main);
+        }
+
+        .slider-value {
+            font-family: var(--font-display);
+            font-weight: 700;
+            color: var(--neon-green);
+        }
+
+        input[type="range"] {
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: rgba(255, 255, 255, 0.1);
+            outline: none;
+            -webkit-appearance: none;
+            appearance: none;
+            cursor: pointer;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: var(--neon-green);
+            box-shadow: 0 0 8px var(--neon-green-glow);
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 0.75rem;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            background: rgba(255, 255, 255, 0.02);
+            color: var(--text-main);
+            font-family: var(--font-display);
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            letter-spacing: 1px;
+        }
+
+        .btn:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .btn-active {
+            background: linear-gradient(90deg, #1f4068, var(--neon-green));
+            border: none;
+            color: #0b0c10;
+        }
+        
+        .btn-active:hover {
+            box-shadow: 0 0 15px var(--neon-green-glow);
+            background: linear-gradient(90deg, #1f4068, var(--neon-green));
+        }
+
+        .btn-danger {
+            background: rgba(255, 0, 127, 0.1);
+            border-color: var(--neon-red);
+            color: var(--neon-red);
+        }
+
+        .btn-danger:hover {
+            background: var(--neon-red);
+            color: var(--text-main);
+            box-shadow: 0 0 15px var(--neon-red-glow);
+        }
+
+        /* Anomaly alert panel */
+        .alerts-panel {
+            max-height: 480px;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            overflow-y: auto;
+            padding-right: 0.5rem;
+        }
+
+        .alert-item {
+            background: rgba(255, 0, 127, 0.05);
+            border: 1px solid rgba(255, 0, 127, 0.2);
+            border-left: 4px solid var(--neon-red);
+            border-radius: 8px;
+            padding: 1rem;
+            animation: slideIn 0.3s ease-out;
+            position: relative;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateX(20px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        .alert-title {
+            font-family: var(--font-display);
+            font-weight: 700;
+            color: var(--neon-red);
+            font-size: 0.9rem;
+            margin-bottom: 0.25rem;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .alert-details {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            line-height: 1.4;
+        }
+
+        .alert-details span {
+            color: var(--text-main);
+            font-weight: 600;
+        }
+
+        /* Live Stream Table */
+        .table-card {
+            padding: 0;
+            overflow: hidden;
+        }
+
+        .table-header-bar {
+            padding: 1.25rem 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .table-title {
+            font-family: var(--font-display);
+            font-weight: 700;
+            font-size: 1.1rem;
+        }
+
+        .table-container {
+            max-height: 400px;
+            overflow-y: auto;
+            overflow-x: auto; /* Enables horizontal scrolling for the table if screen is narrow */
+            width: 100%;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.85rem;
+            text-align: left;
+        }
+
+        th {
+            background: rgba(255, 255, 255, 0.02);
+            padding: 0.75rem 1.5rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+            border-bottom: 1px solid var(--border-color);
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 1px;
+        }
+
+        td {
+            padding: 0.85rem 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+            vertical-align: middle;
+        }
+
+        tr.anomaly-row {
+            background: rgba(255, 0, 127, 0.03);
+            border-left: 2px solid var(--neon-red);
+        }
+
+        tr.anomaly-row:hover {
+            background: rgba(255, 0, 127, 0.05);
+        }
+
+        tr:hover {
+            background: rgba(255, 255, 255, 0.01);
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-weight: 600;
+            font-size: 0.7rem;
+            text-transform: uppercase;
+        }
+
+        .badge-normal {
+            background: rgba(0, 242, 254, 0.15);
+            color: var(--neon-green);
+        }
+
+        .badge-fraud {
+            background: rgba(255, 0, 127, 0.15);
+            color: var(--neon-red);
+            box-shadow: 0 0 5px var(--neon-red-glow);
+        }
+
+        /* Interactive Feedback buttons */
+        .feedback-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .btn-feedback {
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            border: 1px solid var(--border-color);
+            background: rgba(255, 255, 255, 0.03);
+            color: var(--text-main);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-feedback:hover {
+            border-color: rgba(255, 255, 255, 0.25);
+        }
+
+        .btn-feedback.confirm:hover {
+            background: rgba(255, 0, 127, 0.15);
+            color: var(--neon-red);
+            border-color: var(--neon-red);
+        }
+
+        .btn-feedback.dismiss:hover {
+            background: rgba(0, 242, 254, 0.15);
+            color: var(--neon-green);
+            border-color: var(--neon-green);
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="logo-area">
+            <h1>SENTRY // ANOMALY SYSTEM</h1>
+            <p>Real-Time Unsupervised ML Financial Stream Guardian</p>
+        </div>
+        <div class="connection-status">
+            <span class="status-dot" id="status-dot"></span>
+            <span id="status-text">DISCONNECTED</span>
+        </div>
+    </header>
+
+    <!-- KPI Grid -->
+    <div class="metrics-grid">
+        <div class="card kpi-card">
+            <div class="card-label">Total Transactions</div>
+            <div class="card-value" id="count-total">0</div>
+            <div class="kpi-trend" style="color: var(--neon-green)">
+                ⚡ LIVE STREAM TICKING
+            </div>
+        </div>
+        <div class="card kpi-card" id="alert-card">
+            <div class="card-label">Anomalies Detected</div>
+            <div class="card-value alert-value" id="count-anomalies">0</div>
+            <div class="kpi-trend" id="alert-trend" style="color: var(--text-secondary)">
+                0% Fraud Ratio
+            </div>
+        </div>
+        <div class="card kpi-card">
+            <div class="card-label">Active Learning Pool</div>
+            <div class="card-value" id="count-feedback" style="color: #dfa250">0</div>
+            <div class="kpi-trend" id="feedback-trend" style="color: var(--text-secondary)">
+                0 confirmed / 0 dismissed
+            </div>
+        </div>
+        <div class="card kpi-card">
+            <div class="card-label">Avg System Latency</div>
+            <div class="card-value" id="metric-latency" style="color: #9d4edd">0.0 ms</div>
+            <div class="kpi-trend" style="color: var(--text-secondary)">
+                IForest + PyTorch LSTM pipeline
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Grid -->
+    <div class="workspace-grid">
+        
+        <!-- Left: Charts, Controls, Tables -->
+        <div class="left-column">
+            
+            <!-- Controls and Dynamic Weight adjustments -->
+            <div class="controls-row">
+                <div class="card">
+                    <h3 class="table-title" style="margin-bottom: 1.25rem;">Consensus Blending Model Controls</h3>
+                    
+                    <div class="slider-group">
+                        <div class="slider-header">
+                            <span>Ensemble Weight Blending (α)</span>
+                            <span class="slider-value" id="alpha-val">0.50</span>
+                        </div>
+                        <input type="range" id="slider-alpha" min="0.0" max="1.0" step="0.05" value="0.50">
+                        <div class="slider-header" style="font-size: 0.7rem; color: var(--text-secondary); margin-top: 0.25rem;">
+                            <span>⬅ Pure PyTorch LSTM Autoencoder</span>
+                            <span>Pure Isolation Forest ➡</span>
+                        </div>
+                    </div>
+
+                    <div class="slider-group">
+                        <div class="slider-header">
+                            <span>Consensus Anomaly Threshold</span>
+                            <span class="slider-value" id="threshold-val" style="color: var(--neon-red);">0.50</span>
+                        </div>
+                        <input type="range" id="slider-threshold" min="0.0" max="1.0" step="0.01" value="0.50">
+                    </div>
+                </div>
+
+                <div class="card" style="display: flex; flex-direction: column; justify-content: space-between;">
+                    <div>
+                        <h3 class="table-title" style="margin-bottom: 0.5rem;">Streaming Control Gateway</h3>
+                        <p style="font-size: 0.8rem; color: var(--text-secondary); line-height: 1.4;">
+                            Start or pause the underlying mock Kafka transaction stream. Pause the feed to inspect historical features or record manual annotations.
+                        </p>
+                    </div>
+                    <div class="btn-group">
+                        <button class="btn btn-active" id="btn-stream-start">Resume Stream</button>
+                        <button class="btn" id="btn-stream-pause">Pause Stream</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Real-Time Rolling Chart -->
+            <div class="card" style="height: 350px;">
+                <h3 class="table-title" style="margin-bottom: 1rem;">Transaction Risk Vector (Real-Time Rolling Amount)</h3>
+                <div style="height: calc(100% - 2rem); position: relative;">
+                    <canvas id="chart-realtime"></canvas>
+                </div>
+            </div>
+
+            <!-- Live Ticker Table -->
+            <div class="card table-card">
+                <div class="table-header-bar">
+                    <h3 class="table-title">Live Dynamic Event Ticker (Kafka Subscriptions)</h3>
+                    <div style="font-size: 0.8rem; color: var(--text-secondary);">Showing last 100 entries</div>
+                </div>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Timestamp</th>
+                                <th>Sender</th>
+                                <th>Tx Type</th>
+                                <th>Amount</th>
+                                <th>Stateful features</th>
+                                <th>Anomaly Score</th>
+                                <th>Status</th>
+                                <th>Active Feedback</th>
+                            </tr>
+                        </thead>
+                        <tbody id="ticker-body">
+                            <!-- Rows injected dynamically via WS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Right Column: Recent Anomaly Panel -->
+        <div class="right-column" style="display: flex; flex-direction: column; gap: 1.5rem;">
+            <div class="card" style="flex: 1; min-height: 500px;">
+                <h3 class="table-title" style="margin-bottom: 1.25rem; display: flex; align-items: center; gap: 0.5rem;">
+                    🛡️ High-Risk Fraud Alerts
+                    <span style="font-size: 0.75rem; background: var(--neon-red); color: #fff; padding: 0.1rem 0.4rem; border-radius: 4px; animation: pulse 2s infinite;" id="alert-counter-badge">0</span>
+                </h3>
+                <div class="alerts-panel" id="alerts-container">
+                    <!-- Alerts generated dynamically -->
+                    <div style="color: var(--text-secondary); text-align: center; margin-top: 4rem; font-size: 0.9rem;" id="no-alerts-msg">
+                        No critical anomalies currently intercepted.
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Active Learning CSS Pulse keyframes -->
+    <style>
+        @keyframes pulse {
+            0% { opacity: 0.6; }
+            50% { opacity: 1; box-shadow: 0 0 10px var(--neon-red); }
+            100% { opacity: 0.6; }
+        }
+    </style>
+
+    <script>
+        // DOM Handles
+        const statusDot = document.getElementById("status-dot");
+        const statusText = document.getElementById("status-text");
+        const countTotal = document.getElementById("count-total");
+        const countAnomalies = document.getElementById("count-anomalies");
+        const countFeedback = document.getElementById("count-feedback");
+        const feedbackTrend = document.getElementById("feedback-trend");
+        const metricLatency = document.getElementById("metric-latency");
+        const alertCard = document.getElementById("alert-card");
+        const alertTrend = document.getElementById("alert-trend");
+        const sliderAlpha = document.getElementById("slider-alpha");
+        const alphaVal = document.getElementById("alpha-val");
+        const sliderThreshold = document.getElementById("slider-threshold");
+        const thresholdVal = document.getElementById("threshold-val");
+        const tickerBody = document.getElementById("ticker-body");
+        const alertsContainer = document.getElementById("alerts-container");
+        const noAlertsMsg = document.getElementById("no-alerts-msg");
+        const alertCounterBadge = document.getElementById("alert-counter-badge");
+        
+        // Buttons
+        const btnStreamStart = document.getElementById("btn-stream-start");
+        const btnStreamPause = document.getElementById("btn-stream-pause");
+
+        // Counters
+        let totalTxCount = 0;
+        let anomalyCount = 0;
+        let confirmedCount = 0;
+        let dismissedCount = 0;
+
+        // active learning cache (logged locally)
+        const recordedFeedbackTxs = new Set();
+
+        // Chart Setup
+        const ctx = document.getElementById('chart-realtime').getContext('2d');
+        const MAX_DATA_POINTS = 30;
+        
+        const chartData = {
+            labels: [],
+            datasets: [
+                {
+                    label: 'Transaction Amount ($)',
+                    data: [],
+                    borderColor: '#1f4068',
+                    borderWidth: 2,
+                    pointBackgroundColor: [],
+                    pointBorderColor: [],
+                    pointRadius: [],
+                    tension: 0.3,
+                    fill: false
+                }
+            ]
+        };
+
+        const chartOptions = {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                x: {
+                    grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                    ticks: { color: '#8b9bb4', display: false }
+                },
+                y: {
+                    grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                    ticks: { color: '#8b9bb4' }
+                }
+            },
+            plugins: {
+                legend: { display: false }
+            }
+        };
+
+        const realtimeChart = new Chart(ctx, {
+            type: 'line',
+            data: chartData,
+            options: chartOptions
+        });
+
+        // Initialize sliders on UI from hardcoded defaults
+        sliderAlpha.value = 0.50;
+        sliderThreshold.value = 0.50;
+
+        // WebSocket connection
+        let ws;
+        function connectWebSocket() {
+            const wsScheme = window.location.protocol === "https:" ? "wss" : "ws";
+            const wsUrl = `${wsScheme}://${window.location.host}/ws`;
+            
+            ws = new WebSocket(wsUrl);
+
+            ws.onopen = () => {
+                statusDot.classList.add("connected");
+                statusText.innerText = "CONNECTED";
+                statusText.style.color = "#00ffd2";
+            };
+
+            ws.onclose = () => {
+                statusDot.classList.remove("connected");
+                statusText.innerText = "DISCONNECTED";
+                statusText.style.color = "var(--neon-red)";
+                // Retry connection in 3 seconds
+                setTimeout(connectWebSocket, 3000);
+            };
+
+            ws.onmessage = (event) => {
+                const tx = JSON.parse(event.data);
+                processIncomingTransaction(tx);
+            };
+        }
+
+        function processIncomingTransaction(tx) {
+            totalTxCount++;
+            countTotal.innerText = totalTxCount;
+            
+            // Update Latency
+            metricLatency.innerText = `${tx.latency_ms.toFixed(1)} ms`;
+            
+            const isAnomaly = tx.is_anomaly === 1;
+            
+            if (isAnomaly) {
+                anomalyCount++;
+                countAnomalies.innerText = anomalyCount;
+                alertCard.classList.add("alert-active");
+                
+                // Add alert card
+                addAlertCard(tx);
+            }
+            
+            // Update Fraud Rate
+            const fraudRate = ((anomalyCount / totalTxCount) * 100).toFixed(2);
+            alertTrend.innerText = `${fraudRate}% Fraud Ratio`;
+            
+            // Append to table
+            appendTableRow(tx);
+            
+            // Update Chart
+            updateChart(tx);
+        }
+
+        function addAlertCard(tx) {
+            if (noAlertsMsg) {
+                noAlertsMsg.style.display = 'none';
+            }
+            alertCounterBadge.innerText = anomalyCount;
+
+            const timeStr = new Date(tx.timestamp * 1000).toLocaleTimeString();
+            
+            // Compile list of triggered features to display
+            let alertsTriggered = [];
+            if (tx.impossible_travel === 1) alertsTriggered.push("Impossible Travel Detected");
+            if (tx.velocity_10m > 3) alertsTriggered.push(`High Velocity: ${parseInt(tx.velocity_10m)} txs/10m`);
+            if (tx.monetary_deviation > 3.0) alertsTriggered.push(`Extreme Amount Spurt: ${tx.monetary_deviation.toFixed(1)}x avg`);
+            if (Math.abs(tx.balance_error_orig) > 0.01) alertsTriggered.push(`Orig Balance Mismatch`);
+            
+            if (alertsTriggered.length === 0) {
+                alertsTriggered.push("Consensus Threshold Breach");
+            }
+
+            const alertHtml = `
+                <div class="alert-item" id="alert-card-${tx.nameOrig}-${tx.timestamp}">
+                    <div class="alert-title">
+                        <span>CRITICAL EVENT</span>
+                        <span>${timeStr}</span>
+                    </div>
+                    <div class="alert-details">
+                        Sender: <span>${tx.nameOrig}</span><br>
+                        Recipient: <span>${tx.nameDest}</span><br>
+                        Amount: <span style="color: var(--neon-red); font-weight: 700;">$${tx.amount.toFixed(2)}</span><br>
+                        Risk Level: <span>${(tx.consensus_score * 100).toFixed(0)}% score</span><br>
+                        Triggers: <span style="color: #dfa250; font-size: 0.75rem;">${alertsTriggered.join(", ")}</span>
+                    </div>
+                </div>
+            `;
+            
+            alertsContainer.insertAdjacentHTML('afterbegin', alertHtml);
+            
+            // Limit alert cards inside DOM container to last 15 elements to maintain DOM speed
+            if (alertsContainer.children.length > 15) {
+                alertsContainer.removeChild(alertsContainer.lastChild);
+            }
+        }
+
+        function appendTableRow(tx) {
+            const timeStr = new Date(tx.timestamp * 1000).toLocaleTimeString();
+            const isAnomaly = tx.is_anomaly === 1;
+            
+            const rowClass = isAnomaly ? 'class="anomaly-row"' : '';
+            const badge = isAnomaly 
+                ? `<span class="badge badge-fraud">FRAUD RISK</span>` 
+                : `<span class="badge badge-normal">PASSED</span>`;
+                
+            const statefulList = [];
+            if (tx.impossible_travel === 1) statefulList.push("✈️ TRAVEL");
+            if (tx.velocity_10m > 1) statefulList.push(`⏳ V10:${parseInt(tx.velocity_10m)}`);
+            if (tx.monetary_deviation > 2.0) statefulList.push(`📈 MON:${tx.monetary_deviation.toFixed(1)}`);
+            if (Math.abs(tx.balance_error_orig) > 1.0) statefulList.push("💸 BAL-ERR");
+            
+            const statefulLabel = statefulList.length > 0 
+                ? statefulList.join(" | ") 
+                : '<span style="color: var(--text-secondary); opacity: 0.5;">None</span>';
+                
+            const txIdStr = `${tx.nameOrig}_${tx.timestamp}`;
+
+            // Create buttons or a completed check mark based on if feedback is already recorded
+            let actionHtml = `<span style="color: var(--text-secondary); opacity: 0.5;">-</span>`;
+            if (isAnomaly) {
+                actionHtml = `
+                    <div class="feedback-actions" id="feedback-actions-${txIdStr}">
+                        <button class="btn-feedback confirm" onclick="submitFeedback('${tx.nameOrig}', ${tx.timestamp}, ${tx.amount}, ${tx.consensus_score}, 'CONFIRM_FRAUD')">🚨 Confirm</button>
+                        <button class="btn-feedback dismiss" onclick="submitFeedback('${tx.nameOrig}', ${tx.timestamp}, ${tx.amount}, ${tx.consensus_score}, 'FALSE_ALARM')">✔️ Dismiss</button>
+                    </div>
+                `;
+            }
+
+            const rowHtml = `
+                <tr ${rowClass} id="row-${txIdStr}">
+                    <td>${timeStr}</td>
+                    <td><span style="font-family: var(--font-display); font-weight: 500;">${tx.nameOrig}</span></td>
+                    <td><span style="opacity: 0.8;">${tx.type}</span></td>
+                    <td style="font-weight: 600;">$${tx.amount.toFixed(2)}</td>
+                    <td style="font-size: 0.75rem; font-weight: 600; color: #dfa250;">${statefulLabel}</td>
+                    <td style="font-family: var(--font-display); font-weight: 700; color: ${isAnomaly ? 'var(--neon-red)' : 'var(--neon-green)'}">
+                        ${tx.consensus_score.toFixed(3)}
+                    </td>
+                    <td>${badge}</td>
+                    <td>${actionHtml}</td>
+                </tr>
+            `;
+
+            tickerBody.insertAdjacentHTML('afterbegin', rowHtml);
+
+            // Limit row logs to last 100 rows in viewport
+            if (tickerBody.children.length > 100) {
+                tickerBody.removeChild(tickerBody.lastChild);
+            }
+        }
+
+        function updateChart(tx) {
+            const timeStr = new Date(tx.timestamp * 1000).toLocaleTimeString();
+            const isAnomaly = tx.is_anomaly === 1;
+
+            chartData.labels.push(timeStr);
+            chartData.datasets[0].data.push(tx.amount);
+            
+            // Set styles for anomaly vs normal scatter points
+            if (isAnomaly) {
+                chartData.datasets[0].pointBackgroundColor.push('rgba(255, 0, 127, 1.0)');
+                chartData.datasets[0].pointBorderColor.push('rgba(255, 255, 255, 1.0)');
+                chartData.datasets[0].pointRadius.push(6);
+            } else {
+                chartData.datasets[0].pointBackgroundColor.push('rgba(0, 242, 254, 0.4)');
+                chartData.datasets[0].pointBorderColor.push('rgba(0, 242, 254, 0.8)');
+                chartData.datasets[0].pointRadius.push(3);
+            }
+
+            // Slide window
+            if (chartData.labels.length > MAX_DATA_POINTS) {
+                chartData.labels.shift();
+                chartData.datasets[0].data.shift();
+                chartData.datasets[0].pointBackgroundColor.shift();
+                chartData.datasets[0].pointBorderColor.shift();
+                chartData.datasets[0].pointRadius.shift();
+            }
+
+            realtimeChart.update('none'); // Update without full recalculation animations
+        }
+
+        // POST dynamic configuration updates
+        async function updateModelConfig() {
+            const alpha = parseFloat(sliderAlpha.value);
+            const threshold = parseFloat(sliderThreshold.value);
+            
+            alphaVal.innerText = alpha.toFixed(2);
+            thresholdVal.innerText = threshold.toFixed(2);
+
+            try {
+                const response = await fetch('/api/config', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ alpha, threshold })
+                });
+                const data = await response.json();
+            } catch (err) {
+                console.error("Failed to update dynamic model configurations:", err);
+            }
+        }
+
+        // Active Learning Feedback handlers
+        async function submitFeedback(nameOrig, timestamp, amount, consensus_score, user_label) {
+            const txIdStr = `${nameOrig}_${timestamp}`;
+            if (recordedFeedbackTxs.has(txIdStr)) return;
+            
+            recordedFeedbackTxs.add(txIdStr);
+
+            // Trigger micro-animation on row button panel
+            const actionsContainer = document.getElementById(`feedback-actions-${txIdStr}`);
+            if (actionsContainer) {
+                if (user_label === "CONFIRM_FRAUD") {
+                    actionsContainer.innerHTML = `<span style="color: var(--neon-red); font-weight: 700; font-size: 0.75rem;">🚨 CONFIRMED FRAUD</span>`;
+                    confirmedCount++;
+                } else {
+                    actionsContainer.innerHTML = `<span style="color: var(--neon-green); font-weight: 700; font-size: 0.75rem;">✔️ DISMISSED</span>`;
+                    dismissedCount++;
+                }
+            }
+
+            // Update stats
+            countFeedback.innerText = confirmedCount + dismissedCount;
+            feedbackTrend.innerText = `${confirmedCount} confirmed / ${dismissedCount} dismissed`;
+
+            // Make REST call
+            try {
+                await fetch('/api/feedback', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        timestamp,
+                        nameOrig,
+                        amount,
+                        consensus_score,
+                        system_flag: 1,
+                        user_label
+                    })
+                });
+            } catch (err) {
+                console.error("Failed to post active learning feedback:", err);
+            }
+        }
+
+        // REST Control commands for Producer streaming thread
+        async function controlStream(action) {
+            try {
+                const response = await fetch('/api/control', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action })
+                });
+                const data = await response.json();
+                console.log(`[Stream Gateway] command ${action} status:`, data.message);
+                
+                if (action === "PAUSE") {
+                    btnStreamPause.classList.add("btn-danger");
+                    btnStreamPause.innerText = "STREAM PAUSED";
+                    btnStreamStart.classList.remove("btn-active");
+                } else {
+                    btnStreamPause.classList.remove("btn-danger");
+                    btnStreamPause.innerText = "Pause Stream";
+                    btnStreamStart.classList.add("btn-active");
+                }
+            } catch (err) {
+                console.error("Failed to issue streaming control command:", err);
+            }
+        }
+
+        // Event listeners
+        sliderAlpha.addEventListener("input", updateModelConfig);
+        sliderThreshold.addEventListener("input", updateModelConfig);
+        btnStreamPause.addEventListener("click", () => controlStream("PAUSE"));
+        btnStreamStart.addEventListener("click", () => controlStream("START"));
+
+        // Initialize connection on load
+        connectWebSocket();
+    </script>
+</body>
+</html>
