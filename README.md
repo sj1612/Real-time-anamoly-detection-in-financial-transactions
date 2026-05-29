@@ -1,3 +1,12 @@
+---
+title: Real-Time Anomaly Detection
+emoji: 🛡️
+colorFrom: blue
+colorTo: red
+sdk: docker
+pinned: false
+---
+
 # SENTRY-AI // Real-Time Unsupervised Financial Fraud Streaming Guardian
 
 Sentry-AI is an end-to-end, high-performance, real-time financial transaction anomaly detection platform. Engineered for highly skewed distributions where historical fraud labels are unavailable or dynamic, Sentry-AI integrates classic machine learning and deep learning sequence models within a stateful streaming architecture.
