@@ -7,9 +7,9 @@ sdk: docker
 pinned: false
 ---
 
-# SENTRY-AI // Real-Time Unsupervised Financial Fraud Streaming Guardian
+# Real-Time Unsupervised Financial Fraud Streaming Guardian
 
-Sentry-AI is an end-to-end, high-performance, real-time financial transaction anomaly detection platform. Engineered for highly skewed distributions where historical fraud labels are unavailable or dynamic, Sentry-AI integrates classic machine learning and deep learning sequence models within a stateful streaming architecture.
+This is an end-to-end, high-performance, real-time financial transaction anomaly detection platform. Engineered for highly skewed distributions where historical fraud labels are unavailable or dynamic, Sentry-AI integrates classic machine learning and deep learning sequence models within a stateful streaming architecture.
 
 Featuring an in-memory, thread-safe, mock **Apache Kafka** broker and a responsive **FastAPI WebSocket dashboard**, the platform enables cybersecurity analysts to monitor transactions, dynamically blend models, adjust alert sensitivity, and record human-in-the-loop annotations via an active learning pipeline.
 
@@ -134,3 +134,4 @@ An ensemble of Isolation Trees that recursively partitions features. Anomalies a
 Anomalies are flagged when the blended consensus score exceeds the dynamic threshold:
 $$\text{Consensus Score} = \alpha \cdot \text{Score}_{\text{IForest}} + (1 - \alpha) \cdot \text{Score}_{\text{LSTM}}$$
 Adjusting $\alpha$ shifting weight between static tabular signatures and sequential temporal behaviors in real time.
+Live demo - https://huggingface.co/spaces/sjay1612/real-time-fraud-detection-new
